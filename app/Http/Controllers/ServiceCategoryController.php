@@ -6,9 +6,24 @@ use Illuminate\Http\Request;
 
 class ServiceCategoryController extends Controller
 {
-  public function list()
+  public function list(Request $request)
   {
-    $ServiceCategory=ServiceCategory::orderBy('created_at','ASC')->get();
-    return response()->json(['status'=>'success','data'=>$ServiceCategory]);
+    $limit = $request->input('limit');
+    $keyword = $request->input('keyword');
+
+    $query = ServiceCategory::where('level','parent')->orderBy('created_at', 'ASC');
+
+    if ($keyword) {
+      $query->where('name', 'LIKE', '%' . $keyword . '%');
+    }
+
+    if ($limit) {
+      $ServiceCategory = $query->limit($limit)->get();
+    } else {
+      $ServiceCategory = $query->get();
+    }
+
+    return response()->json(['status' => 'success', 'data' => $ServiceCategory]);
   }
+
 }

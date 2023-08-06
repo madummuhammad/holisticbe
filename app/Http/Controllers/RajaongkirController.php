@@ -8,7 +8,7 @@ class RajaongkirController extends Controller
 {
     function __construct()
     {
-      $this->middleware('auth:api');
+      // $this->middleware('auth:api');
   }
 
   public function province()

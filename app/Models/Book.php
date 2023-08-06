@@ -20,5 +20,10 @@ class Book extends Model
        $model->id = (string) Str::uuid();
    });
 
+
  }
+ public function service()
+ {
+  return $this->belongsTo('App\Models\Service');
+}
 }

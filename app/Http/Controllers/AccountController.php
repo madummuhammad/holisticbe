@@ -27,7 +27,7 @@ class AccountController extends Controller
             }
 
             $averageRating = ($totalRatings > 0) ? $totalStars / $totalRatings : 0;
-            $service->average_rating = $averageRating;
+            $service->average_rating = number_format($averageRating,1);
         }
 
         return response()->json(['status' => 'success', 'data' => $services]);
@@ -35,12 +35,12 @@ class AccountController extends Controller
 
     public function product()
     {
-       $me = auth()->user();
-       $products=Product::where("user_id",$me->id)->get(); 
-       return response()->json(['status' => 'success', 'data' => $products]);
-   }
+     $me = auth()->user();
+     $products=Product::where("user_id",$me->id)->get(); 
+     return response()->json(['status' => 'success', 'data' => $products]);
+ }
 
-   public function create_service(Request $request){
+ public function create_service(Request $request){
     $me=auth()->user();
     $validator = Validator::make($request->all(), [
         'image' => 'required',
@@ -51,7 +51,7 @@ class AccountController extends Controller
         'city' => 'required|string|max:255',
         'type_price'=>'required',
         'description' => 'required|string',
-        'note' => 'required|string',
+        // 'note' => 'required|string',
         'date_from' => 'required',
         'date_to' => 'required',
         'from' => 'required',
@@ -116,6 +116,10 @@ public function image_service(Request $request)
 
     if(env('APP_ENV')=='production'){
         $url='https://api.holisticstations.com/images/service/';
+    }
+
+    if(env('APP_ENV')=='development'){
+        $url='https://api-dev.holisticstations.com/images/service/';
     }
     $img = $request->file('file');
 

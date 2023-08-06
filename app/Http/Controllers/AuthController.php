@@ -7,6 +7,8 @@ use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date; 
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactUsEmail;
 class AuthController extends Controller
 {
     public $type;
@@ -69,7 +71,18 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        User::where('no_hp',request('no_hp'))->update(['forgot_password_status'=>0]);
+
         return $this->respondWithToken($token);
+    }
+
+    public function forgot_password()
+    {
+        $phone=request('phone');
+
+        User::where('no_hp',$phone)->update(['forgot_password_status'=>1]);
+
+        return response()->json(['status'=>'success','message'=>'Successfully sent request']);
     }
 
     protected function respondWithToken($token)
@@ -106,6 +119,27 @@ class AuthController extends Controller
   public function account(){
     $me=auth()->user();
     return response()->json(['status'=>'success','data'=>$me]);
+}
+
+public function contact_us(Request $request)
+{
+    $validator=Validator::make($request->all(),[
+        'name' => 'required',
+        'subject'=>'required',
+        'email' => 'required|email',
+        'description' => 'required',
+    ]);
+
+    $data = [
+        'name' => $request->input('name'),
+        'email' => $request->input('email'),
+        'subject' => $request->input('subject'),
+        'description' => $request->input('description'),
+    ];
+
+    Mail::to('muhammad.madum2018@gmail.com')->send(new ContactUsEmail());
+
+    return response()->json(['status'=>'success','message'=>'Your message sent']);
 }
 
 public function edit_account(Request $request)

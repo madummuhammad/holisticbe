@@ -13,9 +13,19 @@ class ProductCategory extends Model
    public $incrementing=false;
 
    protected static function boot() {
-    parent::boot();
-    static::creating(function ($model) {
-        $model->id = (string) Str::uuid();
+     parent::boot();
+     static::creating(function ($model) {
+       $model->id = (string) Str::uuid();
     });
+  }
+
+  function parent()
+  {
+   return $this->belongsTo('App\Models\ProductCategory','parent_id','id');
+}
+
+function child()
+{
+   return $this->hasMany('App\Models\ProductCategory','parent_id','id');
 }
 }
