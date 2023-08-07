@@ -11,7 +11,7 @@ class ServiceCategoryController extends Controller
     $limit = $request->input('limit');
     $keyword = $request->input('keyword');
 
-    $query = ServiceCategory::where('level','parent')->orderBy('created_at', 'ASC');
+    $query = ServiceCategory::where('level','parent')->orderBy('created_at', 'DESC');
 
     if ($keyword) {
       $query->where('name', 'LIKE', '%' . $keyword . '%');
@@ -26,4 +26,23 @@ class ServiceCategoryController extends Controller
     return response()->json(['status' => 'success', 'data' => $ServiceCategory]);
   }
 
-}
+  public function all(Request $request)
+  {
+    $limit = $request->input('limit');
+    $keyword = $request->input('keyword');
+
+    $query = ServiceCategory::where('can_be_deleted',1)->orderBy('created_at', 'DESC');
+
+    if ($keyword) {
+      $query->where('name', 'LIKE', '%' . $keyword . '%');
+    }
+
+    if ($limit) {
+      $ServiceCategory = $query->limit($limit)->get();
+    } else {
+      $ServiceCategory = $query->get();
+    }
+
+    return response()->json(['status' => 'success', 'data' => $ServiceCategory]);  }
+
+  }

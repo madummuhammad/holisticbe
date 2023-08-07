@@ -134,4 +134,43 @@ class UserController extends Controller
         return response()->json(['status' => 'success', 'data' => $sortedUsers]);
     }
 
+    public function filter(Request $request)
+    {
+        $city = $request->input('city');
+        $ratings = $request->input('rating');
+
+        $query = User::where('type','professional')->with('ratings');
+
+        if ($city) {
+            $cityNames = array_map(function ($item) {
+                return $item['name'];
+            }, $city);
+
+            $query->whereIn('city', $cityNames);
+        }
+
+        if ($ratings) {
+            $totalStars = array_sum(array_column($ratings, 'star'));
+            return $averageRating = count($ratings) > 0 ? $totalStars / count($ratings) : 0;
+
+            $query->whereHas('ratings', function ($query) use ($averageRating) {
+                $query->where('star', '>=', $averageRating);
+            });
+        }
+
+        $users = $query->paginate(20);
+        foreach ($users as $user) {
+            $totalStars = 0;
+            $numberOfRatings = $user->ratings->count();
+
+            foreach ($user->ratings as $rating) {
+                $totalStars += $rating->star;
+            }
+
+            $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
+            $user->average_rating = number_format($averageRating,1);
+        }
+        return response()->json(['status' => 'success', 'data' => $users]);
+    }
+
 }

@@ -20,7 +20,6 @@ class ServicePartition extends Model
    static::creating(function ($model) {
      $model->id = (string) Str::uuid();
  });
-
 }
 
 function user()

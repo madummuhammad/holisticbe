@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Service;
+use App\Models\User;
 use App\Models\Product;
 use App\Models\ServicePartition;
 use Illuminate\Http\Request;
@@ -35,21 +36,23 @@ class AccountController extends Controller
 
     public function product()
     {
-     $me = auth()->user();
-     $products=Product::where("user_id",$me->id)->get(); 
-     return response()->json(['status' => 'success', 'data' => $products]);
- }
+       $me = auth()->user();
+       $products=Product::where("user_id",$me->id)->get(); 
+       return response()->json(['status' => 'success', 'data' => $products]);
+   }
 
- public function create_service(Request $request){
+   public function create_service(Request $request){
     $me=auth()->user();
     $validator = Validator::make($request->all(), [
         'image' => 'required',
         'service_category_id' => 'required|exists:service_categories,id',
+        // 'service_sub_category_id' => 'required|exists:service_categories,id',
         'name' => 'required|string|max:255',
         'address' => 'required|string|max:255',
         'province' => 'required|string|max:255',
         'city' => 'required|string|max:255',
         'type_price'=>'required',
+        'type_service'=>'required',
         'description' => 'required|string',
         // 'note' => 'required|string',
         'date_from' => 'required',
@@ -67,7 +70,9 @@ class AccountController extends Controller
     $service->price = $request->input('price');
     $service->phone = $request->input('phone');
     $service->service_category_id = $request->input('service_category_id');
+    $service->service_sub_category_id = $request->input('service_sub_category_id');
     $service->name = $request->input('name');
+    $service->note = $request->input('note');
     $service->date_from = $request->input('date_from');
     $service->date_to = $request->input('date_to');
     $service->from = $request->input('from');
@@ -76,6 +81,7 @@ class AccountController extends Controller
     $service->city = $request->input('city');
     $service->address = $request->input('address');
     $service->type_price = $request->input('type_price');
+    $service->type_service = $request->input('type_service');
     $service->description = $request->input('description');
     $service->image = $request->input('image');
 
@@ -129,6 +135,32 @@ public function image_service(Request $request)
     } else {
         $filename = null;
     }
+
+    return response()->json(['status' => 'success','image' => $url.$filename]);
+}
+
+public function image_profile(Request $request)
+{
+    $me=auth()->user();
+    $url='http://localhost:8000/images/profile/';
+
+    if(env('APP_ENV')=='production'){
+        $url='https://api.holisticstations.com/images/profile/';
+    }
+
+    if(env('APP_ENV')=='development'){
+        $url='https://api-dev.holisticstations.com/images/profile/';
+    }
+    $img = $request->file('file');
+
+    if ($img) {
+        $filename = time() . '.' . $img->getClientOriginalExtension();
+        $img->move(app()->basePath('public') . '/images/profile/', $filename);
+    } else {
+        $filename = null;
+    }
+
+    User::where('id',$me->id)->update(['image'=>$url.$filename]);
 
     return response()->json(['status' => 'success','image' => $url.$filename]);
 }

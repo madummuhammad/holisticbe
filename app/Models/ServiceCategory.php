@@ -18,6 +18,7 @@ class ServiceCategory extends Model
        $model->id = (string) Str::uuid();
     });
   }
+  
   function parent()
   {
    return $this->belongsTo('App\Models\ServiceCategory','parent_id','id');

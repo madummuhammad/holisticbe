@@ -68,7 +68,11 @@ $router->group([
     'prefix' => 'category',
 ], function ($router) {
     $router->get('service', 'ServiceCategoryController@list');
+    $router->get('service/all', 'ServiceCategoryController@all');
+    $router->get('service/sub', 'SubServiceCategoryController@list');
     $router->get('product', 'ProductCategoryController@list');
+    $router->get('product/all', 'ProductCategoryController@all');
+    $router->get('product/sub', 'SubProductCategoryController@list');
 });
 
 $router->group([
@@ -98,6 +102,8 @@ $router->group([
     'prefix' => 'account',
 ], function ($router) {
     $router->group(['middleware' => 'auth:api'], function () use ($router) {
+        $router->post('profile','AccountController@image_profile');
+        
         $router->group([
             'prefix' => 'service',
         ], function ($router) {
@@ -125,6 +131,7 @@ $router->group([
     'prefix' => 'practicioner',
 ], function ($router) {
     $router->get('new', 'UserController@new');
+    $router->post('filter', 'UserController@filter');
     $router->get('all', 'UserController@all');
     $router->get('favorite', 'UserController@favorite');
     $router->get('detail', 'UserController@detail');

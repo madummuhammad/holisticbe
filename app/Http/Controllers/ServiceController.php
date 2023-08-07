@@ -50,55 +50,68 @@ class ServiceController extends Controller
         return response()->json(['status' => 'success', 'data' => $services]);
     }
 
-public function filter(Request $request)
-{
+    public function filter(Request $request)
+    {
     // Mengambil data dari request
-    $type_service = $request->input('type_service');
-    $category = $request->input('category');
-    $city = $request->input('city');
-    $ratings = $request->input('rating');
+        $type_service = $request->input('type_service');
+        $category = $request->input('category');
+        $city = $request->input('city');
+        $ratings = $request->input('rating');
 
     // Query awal
-    $query = Service::with('ratings');
+        $query = Service::with('ratings');
 
     // Filter berdasarkan tipe layanan
-    if ($type_service) {
-        $query->where('type_service', $type_service);
-    }
+        if ($type_service) {
+            $query->where('type_service', $type_service);
+        }
 
     // Filter berdasarkan kategori
-    if ($category) {
-        $categoryIds = array_map(function ($item) {
-            return $item['id'];
-        }, $category);
+        if ($category) {
+            $categoryIds = array_map(function ($item) {
+                return $item['id'];
+            }, $category);
 
-        $query->whereIn('service_category_id', $categoryIds);
-    }
+            $query->whereIn('service_category_id', $categoryIds)
+            ->orWhereIn('service_sub_category_id', $categoryIds);
+        }
 
     // Filter berdasarkan kota
-    if ($city) {
-        $cityNames = array_map(function ($item) {
-            return $item['name'];
-        }, $city);
+        if ($city) {
+            $cityNames = array_map(function ($item) {
+                return $item['name'];
+            }, $city);
 
-        $query->whereIn('city', $cityNames);
-    }
+            $query->whereIn('city', $cityNames);
+        }
 
     // Jika ada rating yang dimasukkan, hitung rata-rata rating dan filter berdasarkan rating
-    if ($ratings) {
-        $totalStars = array_sum(array_column($ratings, 'star'));
-        $averageRating = count($ratings) > 0 ? $totalStars / count($ratings) : 0;
+        if ($ratings) {
+            $totalStars = array_sum(array_column($ratings, 'star'));
+            $averageRating = count($ratings) > 0 ? $totalStars / count($ratings) : 0;
 
-        $query->whereHas('ratings', function ($query) use ($averageRating) {
-            $query->where('star', '>=', $averageRating);
-        });
+            $query->whereHas('ratings', function ($query) use ($averageRating) {
+                $query->where('star', '>=', $averageRating);
+            });
+        }
+
+        $services = $query->paginate(20);
+
+        foreach ($services as $service) {
+            $totalStars = 0;
+            $numberOfRatings = $service->ratings->count();
+
+            foreach ($service->ratings as $rating) {
+                $totalStars += $rating->star;
+            }
+
+            $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
+            $averageRating = number_format($averageRating, 1);
+            $service->average_rating = number_format($averageRating,1);
+        }
+
+        return response()->json(['status' => 'success', 'data' => $services]);
     }
-
-    // Lakukan pagination dengan jumlah data per halaman sebanyak 20
-    $services = $query->paginate(20);
-
-    return response()->json(['status' => 'success', 'data' => $services]);
-}
 
 
     public function all(Request $request)
@@ -188,11 +201,13 @@ public function filter(Request $request)
         $validator = Validator::make($request->all(), [
             'image' => 'required',
             'service_category_id' => 'required|exists:service_categories,id',
+            // 'service_sub_category_id' => 'required|exists:service_categories,id',
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'type_price'=>'required',
+            'type_service'=>'required',
             'description' => 'required|string',
             // 'note' => 'required|string',
             'date_from' => 'required',
@@ -214,11 +229,14 @@ public function filter(Request $request)
         $service->update([
             'image' => $request->input('image'),
             'service_category_id' => $request->input('service_category_id'),
+            'service_sub_category_id' => $request->input('service_sub_category_id'),
             'name' => $request->input('name'),
+            'note' => $request->input('note'),
             'address' => $request->input('address'),
             'province' => $request->input('province'),
             'city' => $request->input('city'),
             'type_price' => $request->input('type_price'),
+            'type_service' => $request->input('type_service'),
             'description' => $request->input('description'),
             'date_from' => $request->input('date_from'),
             'date_to' => $request->input('date_to'),
@@ -278,7 +296,7 @@ public function filter(Request $request)
         }
 
         if ($limit) {
-            $cities = $query->limit(5)->distinct()->select('city', 'province')->get();
+            $cities = $query->limit($limit)->distinct()->select('city', 'province')->get();
         } else {
             $cities = $query->distinct()->select('city', 'province')->get();
         }

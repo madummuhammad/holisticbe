@@ -10,10 +10,15 @@ class SubProductCategoryController extends Controller
     {
         $limit = $request->input('limit');
         $keyword = $request->input('keyword');
+        $parent_id = $request->input('parent_id');
 
-        $query = ProductCategory::where('level','parent')->orderBy('created_at', 'ASC');
+        $query = ProductCategory::where('level','sub')->orderBy('created_at', 'ASC');
 
-        if ($keyword) {
+        if ($parent_id) {
+          $query->where('parent_id', $parent_id);
+      }
+      
+      if ($keyword) {
           $query->where('name', 'LIKE', '%' . $keyword . '%');
       }
 
@@ -22,6 +27,7 @@ class SubProductCategoryController extends Controller
     } else {
         $ProductCategory = $query->get();
     }
+    
 
     return response()->json(['status' => 'success', 'data' => $ProductCategory]);
 }

@@ -62,6 +62,7 @@ class ProductController extends Controller
             }, $category);
 
             $query->whereIn('product_category_id', $categoryIds);
+            $query->orWhereIn('product_sub_category_id', $categoryIds);
         }
 
         if ($min_price && $max_price) {
@@ -98,6 +99,7 @@ class ProductController extends Controller
         $product->user_id = $me->id;
         $product->name = $request->input('name');
         $product->product_category_id = $request->input('product_category_id');
+        $product->product_sub_category_id = $request->input('product_sub_category_id');
         $product->link = $request->input('link');
         $product->price = $request->input('price');
         $product->description = $request->input('description');
@@ -125,7 +127,15 @@ class ProductController extends Controller
 
         $me = auth()->user();
         $service = Product::where('user_id', $me->id)->findOrFail($request->id);
-        $service->update($request->all());
+        $service->update([
+            'name'=>$request->input('name'),
+            'product_category_id'=>$request->input('product_category_id'),
+            'product_sub_category_id'=>$request->input('product_sub_category_id'),
+            'link'=>$request->input('link'),
+            'price'=>$request->input('price'),
+            'description'=>$request->input('description'),
+            'image'=>$request->input('image')
+        ]);
 
         return response()->json(['status' => 'success', 'message' => 'Product updated successfully']);
     }
