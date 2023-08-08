@@ -153,6 +153,8 @@ public function edit_account(Request $request)
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
         'country' => 'required|string|max:255',
+        'province' => 'required',
+        'city' => 'required',
         'no_hp' => [
             'required',
             'numeric',

@@ -44,7 +44,7 @@ class AccountController extends Controller
    public function create_service(Request $request){
     $me=auth()->user();
     $validator = Validator::make($request->all(), [
-        'image' => 'required',
+        // 'image' => 'required',
         'service_category_id' => 'required|exists:service_categories,id',
         // 'service_sub_category_id' => 'required|exists:service_categories,id',
         'name' => 'required|string|max:255',
@@ -52,6 +52,7 @@ class AccountController extends Controller
         'province' => 'required|string|max:255',
         'city' => 'required|string|max:255',
         'type_price'=>'required',
+        'phone'=>'required',
         'type_service'=>'required',
         'description' => 'required|string',
         // 'note' => 'required|string',
