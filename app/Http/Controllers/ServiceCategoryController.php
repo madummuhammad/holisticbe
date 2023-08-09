@@ -31,7 +31,7 @@ class ServiceCategoryController extends Controller
     $limit = $request->input('limit');
     $keyword = $request->input('keyword');
 
-    $query = ServiceCategory::where('can_be_deleted',1)->orderBy('created_at', 'DESC');
+    $query = ServiceCategory::where('can_be_deleted',1)->where('level','parent')->with('child')->orderBy('created_at', 'DESC');
 
     if ($keyword) {
       $query->where('name', 'LIKE', '%' . $keyword . '%');

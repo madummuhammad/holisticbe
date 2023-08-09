@@ -8,6 +8,7 @@ use App\Models\ServicePartition;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\File;
+use Intervention\Image\ImageManagerStatic as Image;
 class AccountController extends Controller
 {
     public function service()
@@ -36,12 +37,12 @@ class AccountController extends Controller
 
     public function product()
     {
-       $me = auth()->user();
-       $products=Product::where("user_id",$me->id)->get(); 
-       return response()->json(['status' => 'success', 'data' => $products]);
-   }
+     $me = auth()->user();
+     $products=Product::where("user_id",$me->id)->get(); 
+     return response()->json(['status' => 'success', 'data' => $products]);
+ }
 
-   public function create_service(Request $request){
+ public function create_service(Request $request){
     $me=auth()->user();
     $validator = Validator::make($request->all(), [
         // 'image' => 'required',
@@ -140,29 +141,49 @@ public function image_service(Request $request)
     return response()->json(['status' => 'success','image' => $url.$filename]);
 }
 
-public function image_profile(Request $request)
+public function edit_profile()
 {
     $me=auth()->user();
-    $url='http://localhost:8000/images/profile/';
+    $image=request('image');
+    User::where('id',$me->id)->update(['image'=>$image]);
 
-    if(env('APP_ENV')=='production'){
-        $url='https://api.holisticstations.com/images/profile/';
+    return response()->json(['status' => 'success','message' => 'Successfully changed profile image']);
+}
+
+public function image_profile(Request $request)
+{
+    $me = auth()->user();
+    $url = 'http://localhost:8000/images/profile/';
+
+    if (env('APP_ENV') == 'production') {
+        $url = 'https://api.holisticstations.com/images/profile/';
     }
 
-    if(env('APP_ENV')=='development'){
-        $url='https://api-dev.holisticstations.com/images/profile/';
+    if (env('APP_ENV') == 'development') {
+        $url = 'https://api-dev.holisticstations.com/images/profile/';
     }
+
     $img = $request->file('file');
+    $resize = Image::make($img)->fit(180, 280);
+
+    // Pemangkasan di atas, menggunakan koordinat x yang tetap di tengah
+    $x = ($resize->width() - 180) / 2;
+    $y = 0;
+    $cropWidth = 180;
+    $cropHeight = 180;
+
+    $resize->crop($cropWidth, $cropHeight, $x, $y);
+
+    $filename = time() . '.' . $img->getClientOriginalExtension();
 
     if ($img) {
-        $filename = time() . '.' . $img->getClientOriginalExtension();
-        $img->move(app()->basePath('public') . '/images/profile/', $filename);
+        $resize->save(app()->basePath('public') . '/images/profile/' . $filename);
+
+        return response()->json(['status' => 'success', 'image' => $url . $filename]);
     } else {
-        $filename = null;
+        return response()->json(['status' => 'error', 'message' => 'Image upload failed.']);
     }
-
-    User::where('id',$me->id)->update(['image'=>$url.$filename]);
-
-    return response()->json(['status' => 'success','image' => $url.$filename]);
 }
+
+
 }

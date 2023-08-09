@@ -6,6 +6,8 @@ $router->group([
     $router->get('city', 'RajaongkirController@city');
 });
 
+$router->get('setting','SettingController@index');
+
 $router->group([
     'prefix' => 'book',
     'middleware'=>'auth:api'
@@ -103,6 +105,7 @@ $router->group([
 ], function ($router) {
     $router->group(['middleware' => 'auth:api'], function () use ($router) {
         $router->post('profile','AccountController@image_profile');
+        $router->post('edit_profile','AccountController@edit_profile');
         
         $router->group([
             'prefix' => 'service',

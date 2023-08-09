@@ -31,7 +31,7 @@ class ProductCategoryController extends Controller
     $limit = $request->input('limit');
     $keyword = $request->input('keyword');
 
-    $query = ProductCategory::where('can_be_deleted',1)->orderBy('created_at', 'DESC');
+    $query = ProductCategory::where('can_be_deleted',1)->where('level','parent')->with('child')->orderBy('created_at', 'DESC');
 
     if ($keyword) {
       $query->where('name', 'LIKE', '%' . $keyword . '%');

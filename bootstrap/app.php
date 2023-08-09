@@ -23,7 +23,7 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-$app->withFacades();
+$app->withFacades(true, [ 'Intervention\Image\Facades\Image' => 'Image' ]);
 
 $app->withEloquent();
 
@@ -113,6 +113,7 @@ $app->register(App\Providers\AuthServiceProvider::class);
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(\Illuminate\Mail\MailServiceProvider::class);
+$app->register(Intervention\Image\ImageServiceProviderLumen::class);
 /*
 |--------------------------------------------------------------------------
 | Load The Application Routes
