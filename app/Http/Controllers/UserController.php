@@ -7,55 +7,78 @@ use App\Models\User;
 use App\Models\Service;
 class UserController extends Controller
 {
-    public function detail(Request $request)
-    {
-        $id = $request->input('id');
-        $user = User::where('id', $id)->first();
+public function detail(Request $request)
+{
+    $id = $request->input('id');
+    $user = User::where('id', $id)->first();
 
-        $user->service = null;
-        $service = Service::where('user_id', $user->id)->with('ratings')->get();
+    $user->service = null;
+    $service = Service::where('user_id', $user->id)->with('ratings')->get();
 
-        $requestDate = $request->input('date');
+    $requestDate = $request->input('date');
 
-        if ($requestDate) {
-            $filteredServices = $service->filter(function ($serviceItem) use ($requestDate) {
-                $serviceDateFrom = $serviceItem->date_from;
-                $serviceDateTo = $serviceItem->date_to;
+    if ($requestDate) {
+        $filteredServices = $service->filter(function ($serviceItem) use ($requestDate) {
+            $serviceDateFrom = $serviceItem->date_from;
+            $serviceDateTo = $serviceItem->date_to;
 
-                return $this->isDateInRange($requestDate, $serviceDateFrom, $serviceDateTo);
-        })->values(); // Tambahkan metode values() untuk mengatur ulang indeks array.
+            return $this->isDateInRange($requestDate, $serviceDateFrom, $serviceDateTo);
+        })->values();
 
-            foreach ($filteredServices as $filteredService) {
-                $totalStars = 0;
-                $numberOfRatings = $filteredService->ratings->count();
+        foreach ($filteredServices as $filteredService) {
+            $totalStars = 0;
+            $numberOfRatings = $filteredService->ratings->count();
 
-                foreach ($filteredService->ratings as $rating) {
-                    $totalStars += $rating->star;
-                }
-
-                $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
-                $filteredService->average_rating = number_format($averageRating,1);
+            foreach ($filteredService->ratings as $rating) {
+                $totalStars += $rating->star;
             }
 
-            $user->service = $filteredServices;
-        } else {
-            foreach ($service as $serviceItem) {
-                $totalStars = 0;
-                $numberOfRatings = $serviceItem->ratings->count();
-
-                foreach ($serviceItem->ratings as $rating) {
-                    $totalStars += $rating->star;
-                }
-
-                $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
-                $serviceItem->average_rating = number_format($averageRating,1);
-            }
-
-            $user->service = $service;
+            $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
+            $filteredService->average_rating = number_format($averageRating,1);
         }
 
-        return response()->json(['status' => 'success', 'data' => $user]);
+        $user->service = $filteredServices;
+
+        // Find services with always_available = 1
+        $alwaysAvailableServices = $service->filter(function ($serviceItem) {
+            return $serviceItem->always_available == 1;
+        });
+
+        // Add always_available = 1 services if not already in user's service list
+        foreach ($alwaysAvailableServices as $alwaysAvailableService) {
+            if (!$user->service->contains('id', $alwaysAvailableService->id)) {
+                $totalStars = 0;
+                $numberOfRatings = $alwaysAvailableService->ratings->count();
+
+                foreach ($alwaysAvailableService->ratings as $rating) {
+                    $totalStars += $rating->star;
+                }
+
+                $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
+                $alwaysAvailableService->average_rating = number_format($averageRating,1);
+
+                $user->service->push($alwaysAvailableService);
+            }
+        }
+    } else {
+        foreach ($service as $serviceItem) {
+            $totalStars = 0;
+            $numberOfRatings = $serviceItem->ratings->count();
+
+            foreach ($serviceItem->ratings as $rating) {
+                $totalStars += $rating->star;
+            }
+
+            $averageRating = $numberOfRatings > 0 ? $totalStars / $numberOfRatings : 0;
+            $serviceItem->average_rating = number_format($averageRating,1);
+        }
+
+        $user->service = $service;
     }
+
+    return response()->json(['status' => 'success', 'data' => $user]);
+}
+
 
     private function isDateInRange($date, $dateFrom, $dateTo)
     {
