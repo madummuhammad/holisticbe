@@ -43,6 +43,9 @@ class AccountController extends Controller
  }
 
  public function create_service(Request $request){
+
+    $price=preg_replace('/[^0-9]/', '', $request->input('price'));
+
     $me=auth()->user();
     $validator = Validator::make($request->all(), [
         // 'image' => 'required',
@@ -69,7 +72,7 @@ class AccountController extends Controller
 
     $service = new Service();
     $service->user_id = $me->id;
-    $service->price = $request->input('price');
+    $service->price = $price;
     $service->phone = $request->input('phone');
     $service->service_category_id = $request->input('service_category_id');
     $service->service_sub_category_id = $request->input('service_sub_category_id');
@@ -98,7 +101,7 @@ class AccountController extends Controller
             $servicePartition->service_id = $service->id; // The ID of the newly created service
             $servicePartition->title = $partition['title'];
             $servicePartition->type_price = $partition['type_price'];
-            $servicePartition->price = $partition['price'];
+            $servicePartition->price = preg_replace('/[^0-9]/', '', $partition['price']);
             $servicePartition->time_from = $partition['from'];
             $servicePartition->time_to = $partition['to'];
             $servicePartition->save();
@@ -109,7 +112,7 @@ class AccountController extends Controller
         $servicePartition->service_id = $service->id;
         $servicePartition->title = $request->input('name');
         $servicePartition->type_price = $request->input('type_price');
-        $servicePartition->price = $request->input('price');
+        $servicePartition->price = $price;
         $servicePartition->time_from = $request->input('from');
         $servicePartition->time_to = $request->input('to');
         $servicePartition->save();

@@ -224,6 +224,7 @@ class ServiceController extends Controller
 
     public function edit(Request $request)
     {
+        // $price=preg_replace('/[^0-9]/', '', $request->input('price'));
         $me = auth()->user();
         $validator = Validator::make($request->all(), [
             // 'image' => 'required',
@@ -260,6 +261,7 @@ class ServiceController extends Controller
             'service_sub_category_id' => $request->input('service_sub_category_id'),
             'name' => $request->input('name'),
             'note' => $request->input('note'),
+            'phone' => $request->input('phone'),
             'address' => $request->input('address'),
             'province' => $request->input('province'),
             'city' => $request->input('city'),
@@ -283,7 +285,7 @@ class ServiceController extends Controller
                         'service_id' => $serviceId,
                         'title' => $partition['title'],
                         'type_price' => $partition['type_price'],
-                        'price' => $partition['price'],
+                        'price' =>preg_replace('/[^0-9]/', '',$partition['price']),
                         'time_from' => $partition['time_from'],
                         'time_to' => $partition['time_to'],
                     ]);
@@ -294,7 +296,7 @@ class ServiceController extends Controller
                         'service_id' => $serviceId,
                         'title' => $partition['title'],
                         'type_price' => $partition['type_price'],
-                        'price' => $partition['price'],
+                        'price' => preg_replace('/[^0-9]/', '',$partition['price']),
                         'time_from' => $partition['time_from'],
                         'time_to' => $partition['time_to'],
                     ]);
