@@ -7,6 +7,7 @@ $router->group([
 });
 
 $router->get('setting','SettingController@index');
+$router->get('faq','SettingController@faq');
 
 $router->group([
     'prefix' => 'book',

@@ -80,6 +80,7 @@ class AccountController extends Controller
     $service->from = $request->input('from');
     $service->to = $request->input('to');
     $service->province = $request->input('province');
+    $service->always_available = $request->input('always_available');
     $service->city = $request->input('city');
     $service->address = $request->input('address');
     $service->type_price = $request->input('type_price');
