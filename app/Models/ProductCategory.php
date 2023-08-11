@@ -5,27 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 class ProductCategory extends Model
 {
-   use HasFactory;
+ use HasFactory;
+ use SoftDeletes;
+ protected $guarded=[];
+ public $incrementing=false;
 
-   protected $guarded=[];
-   public $incrementing=false;
+ protected static function boot() {
+   parent::boot();
+   static::creating(function ($model) {
+     $model->id = (string) Str::uuid();
+   });
+ }
 
-   protected static function boot() {
-     parent::boot();
-     static::creating(function ($model) {
-       $model->id = (string) Str::uuid();
-    });
-  }
-
-  function parent()
-  {
+ function parent()
+ {
    return $this->belongsTo('App\Models\ProductCategory','parent_id','id');
-}
+ }
 
-function child()
-{
+ function child()
+ {
    return $this->hasMany('App\Models\ProductCategory','parent_id','id');
-}
+ }
 }

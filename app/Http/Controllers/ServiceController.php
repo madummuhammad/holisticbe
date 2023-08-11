@@ -17,6 +17,7 @@ class ServiceController extends Controller
         $limit = $request->input('limit');
         $query = Service::query();
         $currentDate = \Carbon\Carbon::now();
+        $sort=$request->input('sort');
 
         $query->where(function ($q) use ($currentDate) {
             $q->where(function ($innerQ) use ($currentDate) {
@@ -39,6 +40,11 @@ class ServiceController extends Controller
 
         if ($type_service) {
             $query->where('type_service', $type_service);
+        }
+
+        $sort=$request->input('sort');
+        if($sort){
+            $query->orderBy('name',$sort);
         }
 
         if ($limit) {
@@ -111,7 +117,10 @@ class ServiceController extends Controller
                 $query->where('star', '>=', $averageRating);
             });
         }
-
+        $sort=$request->input('sort');
+        if($sort){
+            $query->orderBy('name',$sort);
+        }
         $services = $query->paginate(20);
 
         foreach ($services as $service) {
@@ -163,10 +172,15 @@ class ServiceController extends Controller
             $query->where('city', $city);
         }
 
+
         if ($type_service) {
             $query->where('type_service', $type_service);
         }
 
+        $sort=$request->input('sort');
+        if($sort){
+            $query->orderBy('name',$sort);
+        }
         $services = $query->with('ratings')->paginate(20);
         foreach ($services as $service) {
             $totalStars = 0;

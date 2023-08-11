@@ -19,6 +19,11 @@ class ProductController extends Controller
             $query->where('product_category_id', $product_category_id);
         }
 
+        $sort=$request->input('sort');
+        if($sort){
+            $query->orderBy('name',$sort);
+        }
+
         if ($min_price && $max_price) {
             $query->whereBetween('price', [$min_price, $max_price]);
         }
@@ -48,6 +53,11 @@ class ProductController extends Controller
         $query->whereBetween('price', [$min_price, $max_price]);
     }
 
+    $sort=$request->input('sort');
+    if($sort){
+        $query->orderBy('name',$sort);
+    }
+
     $products = $query->with('user')->paginate(20);
 
     return response()->json(['status' => 'success', 'data' => $products]);
@@ -75,7 +85,10 @@ public function filter(Request $request)
     if ($min_price && $max_price) {
         $query->whereBetween('price', [$min_price, $max_price]);
     }
-
+    $sort=$request->input('sort');
+    if($sort){
+        $query->orderBy('name',$sort);
+    }
     $products = $query->with('user')->paginate(20);
     return response()->json(['status' => 'success', 'data' => $products]);
 }
