@@ -8,6 +8,7 @@ use App\Models\ServicePartition;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManagerStatic as Image;
 class AccountController extends Controller
 {
@@ -15,9 +16,17 @@ class AccountController extends Controller
     {
         $me = auth()->user();
 
+        $currentDate = \Carbon\Carbon::now();
         $services = Service::where('user_id', $me->id)
         ->with('ratings')
         ->orderBy('created_at', 'ASC')
+        ->where(function ($q) use ($currentDate) {
+            $q->where(function ($innerQ) use ($currentDate) {
+                $innerQ->where('always_available', 0)
+                ->whereDate('date_to', '>=', $currentDate);
+            })->orWhere('always_available', 1);
+        })
+
         ->get();
 
         foreach ($services as $service) {
@@ -154,6 +163,65 @@ public function edit_profile()
     return response()->json(['status' => 'success','message' => 'Successfully changed profile image']);
 }
 
+public function change_password(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'password' => 'required',
+        'new_password' => 'required|confirmed',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()]);
+    }
+
+    $user = auth()->user();
+
+    if (!Hash::check($request->input('password'), $user->password)) {
+        return response()->json(['status'=>'error','message' => 'Current password is incorrect']);
+    }
+
+    // Update password
+    $user->update([
+        'password' => Hash::make($request->input('new_password')),
+    ]);
+
+    return response()->json(['status'=>'success','message' => 'Password has been changed successfully']);
+}
+
+// public function image_profile(Request $request)
+// {
+//     $me = auth()->user();
+//     $url = 'http://localhost:8000/images/profile/';
+
+//     if (env('APP_ENV') == 'production') {
+//         $url = 'https://api.holisticstations.com/images/profile/';
+//     }
+
+//     if (env('APP_ENV') == 'development') {
+//         $url = 'https://api-dev.holisticstations.com/images/profile/';
+//     }
+
+//     $img = $request->file('file');
+//     $resize = Image::make($img)->fit(180, 280);
+
+//     $x = ($resize->width() - 180) / 2;
+//     $y = 0;
+//     $cropWidth = 180;
+//     $cropHeight = 180;
+
+//     $resize->crop($cropWidth, $cropHeight, $x, $y);
+
+//     $filename = time() . '.' . $img->getClientOriginalExtension();
+
+//     if ($img) {
+//         $resize->save(app()->basePath('public') . '/images/profile/' . $filename);
+
+//         return response()->json(['status' => 'success', 'image' => $url . $filename]);
+//     } else {
+//         return response()->json(['status' => 'error', 'message' => 'Image upload failed.']);
+//     }
+// }
+
 public function image_profile(Request $request)
 {
     $me = auth()->user();
@@ -168,26 +236,19 @@ public function image_profile(Request $request)
     }
 
     $img = $request->file('file');
-    $resize = Image::make($img)->fit(180, 280);
-
-    // Pemangkasan di atas, menggunakan koordinat x yang tetap di tengah
-    $x = ($resize->width() - 180) / 2;
-    $y = 0;
-    $cropWidth = 180;
-    $cropHeight = 180;
-
-    $resize->crop($cropWidth, $cropHeight, $x, $y);
 
     $filename = time() . '.' . $img->getClientOriginalExtension();
 
     if ($img) {
-        $resize->save(app()->basePath('public') . '/images/profile/' . $filename);
+        // Simpan gambar tanpa resize
+        $img->move(app()->basePath('public') . '/images/profile/', $filename);
 
         return response()->json(['status' => 'success', 'image' => $url . $filename]);
     } else {
         return response()->json(['status' => 'error', 'message' => 'Image upload failed.']);
     }
 }
+
 
 
 }

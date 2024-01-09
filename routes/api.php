@@ -4,6 +4,7 @@ $router->group([
 ], function ($router) {
     $router->get('province', 'RajaongkirController@province');
     $router->get('city', 'RajaongkirController@city');
+    $router->get('subdistrict', 'RajaongkirController@sub');
 });
 
 $router->get('setting','SettingController@index');
@@ -106,6 +107,7 @@ $router->group([
 ], function ($router) {
     $router->group(['middleware' => 'auth:api'], function () use ($router) {
         $router->post('profile','AccountController@image_profile');
+        $router->post('change_password','AccountController@change_password');
         $router->post('edit_profile','AccountController@edit_profile');
         
         $router->group([

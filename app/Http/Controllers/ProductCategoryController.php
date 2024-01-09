@@ -31,7 +31,9 @@ class ProductCategoryController extends Controller
     $limit = $request->input('limit');
     $keyword = $request->input('keyword');
 
-    $query = ProductCategory::where('level','parent')->with('child')->orderBy('created_at', 'ASC');
+    $query = ProductCategory::where('level','parent')->with(['child' => function ($query) {
+      $query->orderBy('name', 'ASC'); 
+    }])->orderBy('created_at', 'ASC');
 
     if ($keyword) {
       $query->where('name', 'LIKE', '%' . $keyword . '%');
